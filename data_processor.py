@@ -38,7 +38,7 @@ class DataProcessing:
             self.meta_df = pd.read_csv(self.metadata_file)
 
             # Sort metadata to match the TIC order in the main data
-            self.meta_df = self.meta_df.set_index('TIC').loc[self.tic_ids].reset_index()
+            #self.meta_df = self.meta_df.set_index('TIC').loc[self.tic_ids].reset_index()
 
             # Remove TIC and label columns from metadata
             self.meta_data = self.meta_df.drop(columns=['TIC', 'label']).values.astype(np.float32)
