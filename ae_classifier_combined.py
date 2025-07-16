@@ -3,6 +3,7 @@ import network_models_256 as nets_256
 import network_models_128 as nets_128
 import network_models_1024_bens_transpose as nets_1024_bens_transpose
 import network_models_1024_bens_maxunpool as nets_1024_bens_maxunpool
+import network_models_4096 as nets_4096
 from mlp_classifier import MLP_classifier as mlp
 from binary_classifier import Binary_classifier as bc
 import torch.nn as nn
@@ -85,7 +86,9 @@ class autoencoder_classifier(nn.Module):
             'nets_256': nets_256,
             'nets_128': nets_128,
             'nets_1024_bens_transpose': nets_1024_bens_transpose,
-            'nets_1024_bens_maxunpool': nets_1024_bens_maxunpool
+            'nets_1024_bens_maxunpool': nets_1024_bens_maxunpool, 
+            'nets_4096': nets_4096
+
         }
         self.classifier_model_dict = {
             'mlp': mlp,
