@@ -50,7 +50,9 @@ class DwarfTrainer:
         # Initialize training utilities (this will also load data)
         self.utils = TrainerUtils()
         self.utils.set_trainer(self)
-        self.utils._load_data()
+
+        if(not self.dpc.test_mode):
+            self.utils._load_data()
 
         # Initialize model
         self.model = ae_classifier_combined.autoencoder_classifier(
@@ -68,8 +70,9 @@ class DwarfTrainer:
         self.scheduler = self.utils._init_scheduler()
 
         # Loss functions
-        self.recon_loss_fn = nn.MSELoss()
-        self.class_loss_fn = self.utils.get_classification_loss()
+        if(not self.dpc.test_mode):
+            self.recon_loss_fn = nn.MSELoss()
+            self.class_loss_fn = self.utils.get_classification_loss()
 
         # Early stopping
         self.early_stopping = EarlyStopping(patience=self.patience, min_delta=self.min_delta)
@@ -124,6 +127,9 @@ class DwarfTrainer:
                     break
 
         print("Training complete.")
+
+    def test(self):
+        self.utils._test()
 
     def set_lr(self, lr):
         self.lr = lr

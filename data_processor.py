@@ -10,10 +10,14 @@ class DataProcessing:
         self.file_name = file_name
         self.metadata_file = metadata_file
         self.input_shape = kwargs.get('input_dataset_shape', 1024)
+        self.test_mode = kwargs.get('test_mode', False)
         self.read_csv()
         self.encode_labels()
-        self.split_data_by_tic()
-        self.to_tensors()
+        if (not self.test_mode):
+            self.split_data_by_tic()
+            self.to_tensors()
+        else:
+            self.process_test_data()
 
     def read_csv(self):
         """Reads the main and metadata CSV files."""
@@ -118,17 +122,38 @@ class DataProcessing:
         self.print_summary()
         print("Data processing completed.")
 
+    def process_test_data(self):
+        self.X_test = self.data_frame.values.astype(np.float32)
+        self.y_test = np.array(self.encoded_labels)
+        self.tic_test = np.array(self.tic_ids)
+
+        self.test_data_tensor = torch.tensor(self.X_test, dtype = torch.float32).unsqueeze(1)
+        self.test_label_tensor = torch.tensor(self.y_test, dtype = torch.long)
+
+        if self.meta_data is not None:
+            self.test_meta = self.meta_data.astype(np.float32)
+            self.test_meta_tensor = torch.tensor(self.test_meta, dtype = torch.float32)
+
+        print(f"Input shape: {self.input_shape}\n")
+        print(f"test set size: {self.X_test.shape[0]}\n")
+
     def get_train_set(self):
         return self.train_data_tensor, self.train_label_tensor, self.tic_train
 
     def get_validation_set(self):
         return self.val_data_tensor, self.val_label_tensor, self.tic_val
+    
+    def get_test_set(self):
+        return self.test_data_tensor, self.test_label_tensor, self.tic_test
 
     def get_train_meta(self):
         return self.train_meta_tensor if hasattr(self, 'train_meta_tensor') else None
 
     def get_val_meta(self):
         return self.val_meta_tensor if hasattr(self, 'val_meta_tensor') else None
+    
+    def get_test_meta(self):
+        return self.test_meta_tensor if hasattr(self, 'test_meta_tensor') else None
 
     def get_label_mapping(self):
         return self.label_mapping

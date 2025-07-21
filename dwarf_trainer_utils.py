@@ -5,6 +5,7 @@ from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 from collections import Counter
 from torch.optim.lr_scheduler import CyclicLR
+from sklearn.metrics import precision_score, recall_score, f1_score
 
 class TrainerUtils:
     def __init__(self):
@@ -118,7 +119,7 @@ class TrainerUtils:
                 all_labels.extend(labels.cpu().numpy())
 
         label_counts = Counter(all_labels)
-        num_classes = max(label_counts.keys()) + 1  # safer than len(label_counts)
+        num_classes = max(label_counts.keys()) + 1  
         total_samples = sum(label_counts.values())
 
         weights = [total_samples / (num_classes * label_counts.get(i, 1)) for i in range(num_classes)]
@@ -202,9 +203,6 @@ class TrainerUtils:
         self.trainer.all_predicted_labels = all_preds.cpu().numpy()
         self.trainer.all_true_labels = all_labels.cpu().numpy()
 
-        # === Compute precision, recall, F1 ===
-        from sklearn.metrics import precision_score, recall_score, f1_score
-
         if self.trainer.binary_class:
             average_type = 'binary'
         else:
@@ -222,6 +220,75 @@ class TrainerUtils:
             'val_recall': recall,
             'val_f1': f1
         }
+    
+    def _test(self):
+        test_data, test_labels, test_tics = self.trainer.dpc.get_test_set()
+        test_data = test_data.to(self.trainer.device)
+        test_labels = test_labels.to(self.trainer.device)
+
+        if self.trainer.metadata_dim > 0:
+            test_meta = self.trainer.dpc.get_test_meta().to(self.trainer.device)
+            self.trainer.test_loader = DataLoader(
+                TensorDataset(test_data, test_labels, test_meta, torch.tensor(test_tics)),
+                batch_size=self.trainer.batch_size,
+                shuffle=False
+            )
+        else:
+            self.trainer.test_loader = DataLoader(
+                TensorDataset(test_data, test_labels, torch.tensor(test_tics)),
+                batch_size=self.trainer.batch_size,
+                shuffle=False
+            )
+
+        self.trainer.model.eval()
+
+        all_probs = []
+        all_preds = []
+        all_tics = []
+
+        with torch.no_grad():
+            for batch in self.trainer.test_loader:
+                if self.trainer.metadata_dim > 0:
+                    batch_data, _, batch_meta, batch_tics = batch
+                else:
+                    batch_data, _, batch_tics = batch
+                    batch_meta = None
+
+                batch_data = batch_data.to(self.trainer.device)
+                if batch_meta is not None:
+                    batch_meta = batch_meta.to(self.trainer.device)
+                    self.trainer.model.set_val_metadata(batch_meta)
+
+                _, class_logits = self.trainer.model(batch_data)
+
+                if self.trainer.binary_class:
+                    probs = torch.sigmoid(class_logits).squeeze()  # shape: (B,)
+                    preds = (probs > 0.5).long()
+                else:
+                    probs = torch.softmax(class_logits, dim=1)
+                    preds = torch.argmax(probs, dim=1)
+                    probs = probs.max(dim=1).values  # max class confidence
+
+                all_probs.append(probs.cpu())
+                all_preds.append(preds.cpu())
+                all_tics.append(batch_tics)
+
+        # === Save predictions to CSV ===
+        all_probs = torch.cat(all_probs).numpy()
+        all_preds = torch.cat(all_preds).numpy()
+        all_tics = torch.cat(all_tics).numpy()
+
+        df = pd.DataFrame({
+            'TIC_ID': all_tics,
+            'Raw_Probability': all_probs,
+            'Predicted_Label': all_preds
+        })
+
+        os.makedirs(self.trainer.output_dir, exist_ok=True)
+        csv_path = os.path.join(self.trainer.output_dir, "test_predictions.csv")
+        df.to_csv(csv_path, index=False)
+        print(f"Test predictions saved to {csv_path}")
+
 
 
     def run_epoch(self, epoch, train_autoencoder=True, train_classifier=True):

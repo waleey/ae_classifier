@@ -20,8 +20,6 @@ kernel sizes for now:
 """
 import torch
 from torch import nn
-from torch.utils.data import Dataset
-from scipy.stats import kurtosis,skew
 import torch.nn.functional as F
 
 class AttentionBlock(nn.Module):
