@@ -65,7 +65,7 @@ class bens_cubic(nn.Module):
         self.dense_1_in = 128
         self.dense_1_out = 128
         self.negative_slope = 0.1
-        self.dropout = 0.1
+        self.dropout = 0.3
 
         #required extra functions
         self.unflatten = nn.Unflatten(1,(1,128))
