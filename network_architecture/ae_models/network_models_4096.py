@@ -65,7 +65,7 @@ class bens_cubic(nn.Module):
         self.dense_1_in = 128
         self.dense_1_out = 128
         self.negative_slope = 0.1
-        self.dropout = 0.3
+        self.dropout = 0.2
 
         #required extra functions
         self.unflatten = nn.Unflatten(1,(1,128))
@@ -439,7 +439,7 @@ class decode(bens_cubic):
     def forward(self, features):
       activation = self.de_dense_1(features)
       activation = F.leaky_relu(activation, negative_slope=self.negative_slope)
-      activation = self.de_dropout(activation)
+      #activation = self.de_dropout(activation)
       activation = self.unflatten(activation)
       activation = self.de_attention(activation)
 
