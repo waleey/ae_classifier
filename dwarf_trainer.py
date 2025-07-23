@@ -10,6 +10,7 @@ import os
 import ae_classifier_combined
 from early_stopping import EarlyStopping
 from dwarf_trainer_utils import TrainerUtils
+from itertools import zip_longest
 class DwarfTrainer:
     def __init__(self, data_processor, model_id=None, input_shape=1024,
                  ae_model='nets_1024', classifier_model='mlp',
@@ -180,14 +181,15 @@ class DwarfTrainer:
         #Saving the loss functions
         path = os.path.join(self.output_dir, "loss_logs.txt")
         with open(path, "w") as f:
-          f.write("TrainRecon\tValRecon\tTrainClass\tValClass\n")
-          for t_recon, v_recon, t_class, v_class in zip(
-          self.train_recon_losses,
-          self.val_recon_losses,
-          self.train_class_losses,
-          self.val_class_losses
-          ):
-            f.write(f"{t_recon:.6f}\t{v_recon:.6f}\t{t_class:.6f}\t{v_class:.6f}\n")
+            f.write("TrainRecon\tValRecon\tTrainClass\tValClass\n")
+            for t_recon, v_recon, t_class, v_class in zip_longest(
+                self.train_recon_losses,
+                self.val_recon_losses,
+                self.train_class_losses,
+                self.val_class_losses,
+                fillvalue=float('nan')  # Or another placeholder
+            ):
+                f.write(f"{t_recon:.6f}\t{v_recon:.6f}\t{t_class:.6f}\t{v_class:.6f}\n")
 
         # Reconstruction loss
         plt.subplot(1, 3, 1)
