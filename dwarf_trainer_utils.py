@@ -343,8 +343,11 @@ class TrainerUtils:
 
         # Skip validation and checkpointing if we're only training the autoencoder
         if not train_classifier:
+            val_metrics = self._validate()
+            self.trainer.val_recon_losses.append(val_metrics['val_recon_loss'])
             print(f"Epoch [{epoch + 1}/{self.trainer.num_epochs}], "
-                f"Train Recon: {train_recon_loss:.4f}")
+                f"Train Recon: {train_recon_loss:.4f}, "
+                f"Val Recon: {val_metrics['val_recon_loss']:.4f}")
             return False
 
         # Perform validation only when classifier is being trained
