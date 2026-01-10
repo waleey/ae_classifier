@@ -69,7 +69,8 @@ class autoencoder_classifier(nn.Module):
             bottleneck = torch.cat([bottleneck, meta], dim=1)
 
         class_logits = self.classifier(bottleneck)
-        return reconstructed, class_logits
+
+        return bottleneck, reconstructed, class_logits
 
     def encdoer_fun(self, x):
         return self.encoder(x)
