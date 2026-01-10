@@ -160,7 +160,7 @@ class TrainerUtils:
                     batch_meta = batch_meta.to(self.trainer.device)
                     self.trainer.model.set_val_metadata(batch_meta)
 
-                reconstruction, class_logits = self.trainer.model(batch_data)
+                _, reconstruction, class_logits = self.trainer.model(batch_data)
                 recon_loss = self.trainer.recon_loss_fn(reconstruction, batch_data) * batch_data.size(0)
                 val_recon_loss += recon_loss.item()
 
@@ -222,6 +222,8 @@ class TrainerUtils:
         }
     
     def _test(self):
+        all_latent = []
+
         test_data, test_labels, test_tics = self.trainer.dpc.get_test_set()
         test_data = test_data.to(self.trainer.device)
         test_labels = test_labels.to(self.trainer.device)
@@ -259,7 +261,7 @@ class TrainerUtils:
                     batch_meta = batch_meta.to(self.trainer.device)
                     self.trainer.model.set_val_metadata(batch_meta)
 
-                _, class_logits = self.trainer.model(batch_data)
+                bottleneck, reconstructed, class_logits = self.trainer.model(batch_data)
 
                 if self.trainer.binary_class:
                     probs = torch.sigmoid(class_logits).squeeze()  # shape: (B,)
@@ -288,6 +290,12 @@ class TrainerUtils:
         csv_path = os.path.join(self.trainer.output_dir, "test_predictions.csv")
         df.to_csv(csv_path, index=False)
         print(f"Test predictions saved to {csv_path}")
+
+        bottle = torch.cat(all_latent, dim=0).squeeze(1).numpy()
+        df_bottle = pd.DataFrame(bottle)
+        csv_bottle_path = os.path.join(self.trainer.output_dir, "test_latent_representations.csv")
+        df_bottle.to_csv(csv_bottle_path, index=False)
+
 
 
 
