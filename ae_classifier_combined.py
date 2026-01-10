@@ -52,8 +52,7 @@ class autoencoder_classifier(nn.Module):
     def forward(self, feature):
         bottleneck = self.encoder(feature)
         reconstructed = self.decoder(bottleneck)
-        print(f"bottleneck shape: {bottleneck.shape}")
-
+        
         if self.metadata_dim > 0:
             if self.training:
                 if self.train_metadata is None:

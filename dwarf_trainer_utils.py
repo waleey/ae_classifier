@@ -275,6 +275,7 @@ class TrainerUtils:
                 all_preds.append(preds.cpu())
                 all_tics.append(batch_tics)
                 all_latent.append(bottleneck.cpu())
+                print(f"bottleneck shape: {bottleneck.shape}")
 
         # === Save predictions to CSV ===
         all_probs = torch.cat(all_probs).numpy()
