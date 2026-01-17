@@ -70,7 +70,7 @@ class autoencoder_classifier(nn.Module):
 
         class_logits = self.classifier(bottleneck)
 
-        return bottleneck, reconstructed, class_logits
+        return reconstructed, class_logits
 
     def encdoer_fun(self, x):
         return self.encoder(x)
