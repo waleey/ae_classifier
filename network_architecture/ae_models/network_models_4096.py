@@ -58,17 +58,17 @@ class bens_cubic(nn.Module):
         self.kernel_13 = 15  
         self.kernel_14 = 3
 
-        self.pool_1 = 4
+        self.pool_1 = 2 #change it back to 4
         self.pool_2 = 2
         self.pool_3 = 2
         self.pool_4 = 2
-        self.dense_1_in = 128
-        self.dense_1_out = 128
+        self.dense_1_in = 256
+        self.dense_1_out = 256
         self.negative_slope = 0.1
         self.dropout = 0.2
 
         #required extra functions
-        self.unflatten = nn.Unflatten(1,(1,128))
+        self.unflatten = nn.Unflatten(1,(1,256))
 
         """
         re-writing the convolutional layers
